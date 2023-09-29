@@ -1,12 +1,9 @@
-# next app docker file from python:3.8
 FROM python:3.8
 ENV PYTHONUNBUFFERED 1
 
-RUN mkdir /code
-
-WORKDIR /code
-COPY requirements.txt /code/
-RUN python3 -m pip install -r requirements.txt
-
-COPY . /code/
-EXPOSE 8000
+WORKDIR /app
+COPY poetry.lock pyproject.toml /app/
+RUN apt-get update && apt-get upgrade && python3 -m pip install --upgrade pip poetry && \
+    poetry config virtualenvs.create false && \
+    poetry install --no-dev
+COPY . /app
