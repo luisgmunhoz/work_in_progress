@@ -16,14 +16,14 @@ services:
       - pgdata:/var/lib/postgresql/data
   migrate: 
     build: .
-    command: python manage.py migrate
+    command:  python3 manage.py migrate
     depends_on:
       - db
     env_file:
       - .env
   back:
     build: .
-    command: python manage.py runserver 0.0.0.0:8000
+    command: python3 manage.py runserver 0.0.0.0:8000
     depends_on:
       - migrate
     ports:
