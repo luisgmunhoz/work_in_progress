@@ -7,42 +7,62 @@ services:
       - POSTGRES_HOST=localhost
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=postgres
+      - POSTGRES_DATABASE=postgres
+      - POSTGRES_PORT=5432
     logging:
           options:
             max-size: 10m
             max-file: "3"
     volumes:
       - pgdata:/var/lib/postgresql/data
-  migrate: 
-    build: .
-    command:  python3 manage.py migrate
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $PG_USER -d $PG_DATABASE"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command:  python3 manage.py migrate --noinput 
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+    networks:
+      - app-network
+    
     env_file:
       - .env
+    environment:
+      - PG_HOST=db
+      - PG_USER=postgres
+      - PG_PASSWORD=postgres
+      - PG_DATABASE=postgres
+      - PG_PORT=5432
   back:
-    build: .
+    build: 
+      context: .
+      dockerfile: Dockerfile
     command: python3 manage.py runserver 0.0.0.0:8000
     depends_on:
-      - migrate
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     ports:
       - 8000:8000
     env_file:
       - .env
-  front:
-    build: 
-      context: ./frontend
-      dockerfile: Dockerfile
-    ports:
-      - 3000:3000
-    env_file:
-      - .env
-    depends_on:
-      - back
-    command: npm start
-    restart: 
-      unless-stopped
+    environment:
+      - PG_HOST=db
+      - PG_USER=postgres
+      - PG_PASSWORD=postgres
+      - PG_DATABASE=postgres
+      - PG_PORT=5432
+    networks:
+      - app-network
 networks:
   app-network:
 

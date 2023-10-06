@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "work_in_progress.app",
 ]
 
 MIDDLEWARE = [
@@ -76,11 +77,11 @@ WSGI_APPLICATION = "work_in_progress.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "HOST": "db",
-        "PORT": 5432,
-        "NAME": "postgres",
-        "PASSWORD": "postgres",
-        "USER": "postgres",
+        "HOST": os.environ["PG_HOST"],
+        "PORT": os.environ["PG_PORT"],
+        "NAME": os.environ["PG_DATABASE"],
+        "PASSWORD": os.environ["PG_PASSWORD"],
+        "USER": os.environ["PG_USER"],
     }
 }
 
