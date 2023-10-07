@@ -10,6 +10,11 @@ class LoginSchema(Schema):
     password: str = "password"
 
 
+class LoginSuccess(Schema):
+    message: str = "Logged in succesfully"
+    x_api_key: str = "010302039e09djsja-anasdjasiaosqos"
+
+
 class Default200(Schema):
     message: str = "Ok"
 
@@ -33,6 +38,10 @@ class Default404(Schema):
 class Default500(Schema):
     message: str = "Internal Server Error"
 
+
+login_responses_dict: Dict[int, Schema] = {
+    200: LoginSuccess,
+}
 
 responses_dict: Dict[int, Schema] = {
     200: Default200,
