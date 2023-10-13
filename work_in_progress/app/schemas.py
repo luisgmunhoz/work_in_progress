@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Dict, List
+from typing import Dict, List, Type
 from ninja import ModelSchema, Schema
 
 from work_in_progress.app.models import Company, Contato, Processo
@@ -39,11 +39,11 @@ class Default500(Schema):
     message: str = "Internal Server Error"
 
 
-login_responses_dict: Dict[int, Schema] = {
+login_responses_dict: Dict[int, Type[LoginSuccess]] = {
     200: LoginSuccess,
 }
 
-responses_dict: Dict[int, Schema] = {
+responses_dict: Dict[int, Type[Schema]] = {
     200: Default200,
     204: Default204,
     400: Default400,

@@ -2,7 +2,7 @@ from typing import Optional
 from ninja import NinjaAPI
 from ninja.security import APIKeyHeader
 from work_in_progress.app.models import Company, Contato, Processo, SystemUser
-from work_in_progress.schemas import (
+from work_in_progress.app.schemas import (
     LoginSchema,
     responses_dict,
     login_responses_dict,
@@ -18,11 +18,11 @@ from work_in_progress.schemas import (
 class ApiKey(APIKeyHeader):
     param_name = "X-API-Key"
 
-    def authenticate(self, request, key: str) -> Optional[SystemUser]:
+    def authenticate(self, request, key: Optional[str]) -> Optional[SystemUser]:
         if key in SystemUser.objects.values_list("secret", flat=True):
             system_user = SystemUser.objects.get(secret=key)
             return system_user
-        raise Exception(403, "Invalid Credentials")
+        raise HTTPException(403, "Invalid Credentials")
 
 
 header_key = ApiKey()
@@ -37,7 +37,7 @@ api = NinjaAPI(
 )
 
 
-class Exception(Exception):
+class HTTPException(Exception):
     status_code: int
     message: str
 
@@ -46,7 +46,7 @@ class Exception(Exception):
         self.message = message
 
 
-@api.exception_handler(Exception)
+@api.exception_handler(HTTPException)
 def base_exception(request, exc):
     return api.create_response(
         request,
@@ -61,10 +61,10 @@ def authenticate(request, username: str, password: str) -> Optional[str]:
         if user.password == password:
             return user.secret
         else:
-            raise Exception(403, "Invalid Credentials")
+            raise HTTPException(403, "Invalid Credentials")
 
     except SystemUser.DoesNotExist:
-        raise Exception(403, "Invalid Credentials")
+        raise HTTPException(403, "Invalid Credentials")
 
 
 @api.post("/login", auth=None, response=login_responses_dict, tags=["login"])
@@ -78,9 +78,9 @@ def login(request, data: LoginSchema):
     """
     x_api_key = authenticate(request, username=data.username, password=data.password)
     if x_api_key is not None:
-        return 200, {"message": "Logged in succesfully", "x-api-key": x_api_key}
+        return 200, {"message": "Logged in succesfully", "x_api_key": x_api_key}
     else:
-        raise Exception(403, "Invalid credentials")
+        raise HTTPException(403, "Invalid credentials")
 
 
 @api.get("/contatos", response=response_get_contatos, tags=["contatos"])
@@ -100,12 +100,15 @@ def get_contatos(request):
 @api.post("/contatos", response=responses_dict, tags=["contatos"])
 def create_contato(request, data: ContatoSchema):
     try:
-        contato = Contato.objects.get(email_responsavel=data.email_responsavel)
-        raise Exception(400, "Contato já existe")
+        contato = Contato.objects.get(
+            email_responsavel=data.email_responsavel  # type: ignore
+        )
+        raise HTTPException(400, "Contato já existe")
     except Contato.DoesNotExist:
         contato = Contato.objects.create(**data.dict(), criado_por=request.auth)
         return {
-            "message": f"Contato de nome {contato.nome} e id {contato.contato_id} criado"
+            "message": f"Contato de nome {contato.nome} "
+            f"e id {contato.contato_id} criado"
         }
 
 
@@ -119,26 +122,26 @@ def update_contato(request, contato_id: str, data: ContatoSchema):
         contato = Contato.objects.get(contato_id=contato_id)
         try:
             contato_responsavel = Contato.objects.get(
-                email_responsavel=data.email_responsavel
+                email_responsavel=data.email_responsavel  # type: ignore
             )
         except Contato.DoesNotExist:
             contato_responsavel = None
         if contato_responsavel and contato_responsavel.contato_id != contato.contato_id:
-            raise Exception(400, "Contato já existe")
+            raise HTTPException(400, "Contato já existe")
 
-    except:
-        raise Exception(404, "Contato não existe")
-    contato.nome = data.nome
-    contato.endereco = data.endereco
-    contato.numero = data.numero
-    contato.complemento = data.complemento
-    contato.bairro = data.bairro
-    contato.cidade = data.cidade
-    contato.estado = data.estado
-    contato.cep = data.cep
-    contato.telefone = data.telefone
-    contato.email_responsavel = data.email_responsavel
-    contato.email_cobranca = data.email_cobranca
+    except Exception:
+        raise HTTPException(404, "Contato não existe")
+    contato.nome = data.nome  # type: ignore
+    contato.endereco = data.endereco  # type: ignore
+    contato.numero = data.numero  # type: ignore
+    contato.complemento = data.complemento  # type: ignore
+    contato.bairro = data.bairro  # type: ignore
+    contato.cidade = data.cidade  # type: ignore
+    contato.estado = data.estado  # type: ignore
+    contato.cep = data.cep  # type: ignore
+    contato.telefone = data.telefone  # type: ignore
+    contato.email_responsavel = data.email_responsavel  # type: ignore
+    contato.email_cobranca = data.email_cobranca  # type: ignore
     contato.save()
     return {"message": f"Contato de nome {contato.nome} e id {contato_id} atualizado"}
 
@@ -181,29 +184,30 @@ def get_companies(request):
 )
 def create_company(request, data: CompanySchema):
     try:
-        company = Company.objects.get(cnpj=data.cnpj)
-        raise Exception(400, "Company já existe")
+        company = Company.objects.get(cnpj=data.cnpj)  # type: ignore
+        raise HTTPException(400, "Company já existe")
     except Company.DoesNotExist:
-        if data.contato:
-            contato_id = data.contato
+        if data.contato:  # type: ignore
+            contato_id = data.contato  # type: ignore
             contato = Contato.objects.get(contato_id=contato_id)
         else:
             contato = None
         try:
             company = Company.objects.create(
-                cnpj=data.cnpj,
-                razao_social=data.razao_social,
-                nome_fantasia=data.nome_fantasia,
-                inscricao_estadual=data.inscricao_estadual,
-                inscricao_municipal=data.inscricao_municipal,
+                cnpj=data.cnpj,  # type: ignore
+                razao_social=data.razao_social,  # type: ignore
+                nome_fantasia=data.nome_fantasia,  # type: ignore
+                inscricao_estadual=data.inscricao_estadual,  # type: ignore
+                inscricao_municipal=data.inscricao_municipal,  # type: ignore
                 contato=contato,
                 criado_por=request.auth,
             )
             return {
-                "message": f"Company de nome {company.nome_fantasia} e id {company.company_id} criada"
+                "message": "Company de nome "
+                f"{company.nome_fantasia} e id {company.company_id} criada"
             }
         except Exception as e:
-            raise Exception(400, e)
+            raise HTTPException(400, str(e))
 
 
 @api.put(
@@ -215,24 +219,25 @@ def update_companies(request, company_id: str, data: CompanySchema):
     try:
         company = Company.objects.get(company_id=company_id)
     except Company.DoesNotExist:
-        raise Exception(404, "Company não existe")
-    if data.contato:
-        contato_id = data.contato
+        raise HTTPException(404, "Company não existe")
+    if data.contato:  # type: ignore
+        contato_id = data.contato  # type: ignore
         try:
             contato = Contato.objects.get(contato_id=contato_id)
         except Contato.DoesNotExist:
-            raise Exception(404, "Contato não existe")
+            raise HTTPException(404, "Contato não existe")
     else:
         contato = None
     company.contato = contato if contato else company.contato
-    company.cnpj = data.cnpj
-    company.razao_social = data.razao_social
-    company.nome_fantasia = data.nome_fantasia
-    company.inscricao_estadual = data.inscricao_estadual
-    company.inscricao_municipal = data.inscricao_municipal
+    company.cnpj = data.cnpj  # type: ignore
+    company.razao_social = data.razao_social  # type: ignore
+    company.nome_fantasia = data.nome_fantasia  # type: ignore
+    company.inscricao_estadual = data.inscricao_estadual  # type: ignore
+    company.inscricao_municipal = data.inscricao_municipal  # type: ignore
     company.save()
     return {
-        "message": f"Company de nome {company.nome_fantasia} e id {company.company_id} atualizada"
+        "message": f"Company de nome {company.nome_fantasia} "
+        f"e id {company.company_id} atualizada"
     }
 
 
@@ -245,7 +250,7 @@ def delete_companies(request, company_id: str):
     try:
         company = Company.objects.get(company_id=company_id)
     except Company.DoesNotExist:
-        raise Exception(404, "Company não existe, certeza que esta company existe?")
+        raise HTTPException(404, "Company não existe, certeza que esta company existe?")
     company.delete()
     return {
         "message": f"Company de nome {company.nome_fantasia} e id {company_id} deletada"
@@ -280,7 +285,8 @@ def get_processos(request):
 def create_processo(request, data: ProcessoSchema):
     processo = Processo.objects.create(**data.dict(), criado_por=request.auth)
     return {
-        "message": f"Processo de numero {processo.numero_processo} e id {processo.processo_id} e criado"
+        "message": f"Processo de numero {processo.numero_processo} "
+        f"e id {processo.processo_id} e criado"
     }
 
 
@@ -291,23 +297,24 @@ def create_processo(request, data: ProcessoSchema):
 )
 def update_processo(request, processo_id: str, data: ProcessoSchema):
     processo = Processo.objects.get(processo_id=processo_id)
-    processo.advogado_responsavel = data.advogado_responsavel
-    processo.cliente = data.cliente
-    processo.numero_processo = data.numero_processo
-    processo.vara = data.vara
-    processo.comarca = data.comarca
-    processo.estado = data.estado
-    processo.status = data.status
-    processo.fase = data.fase
-    processo.valor_causa = data.valor_causa
-    processo.valor_condenacao = data.valor_condenacao
-    processo.valor_honorario = data.valor_honorario
-    processo.valor_preposto = data.valor_preposto
-    processo.valor_total = data.valor_total
-    processo.data_distribuicao = data.data_distribuicao
+    processo.advogado_responsavel = data.advogado_responsavel  # type: ignore
+    processo.cliente = data.cliente  # type: ignore
+    processo.numero_processo = data.numero_processo  # type: ignore
+    processo.vara = data.vara  # type: ignore
+    processo.comarca = data.comarca  # type: ignore
+    processo.estado = data.estado  # type: ignore
+    processo.status = data.status  # type: ignore
+    processo.fase = data.fase  # type: ignore
+    processo.valor_causa = data.valor_causa  # type: ignore
+    processo.valor_condenacao = data.valor_condenacao  # type: ignore
+    processo.valor_honorario = data.valor_honorario  # type: ignore
+    processo.valor_preposto = data.valor_preposto  # type: ignore
+    processo.valor_total = data.valor_total  # type: ignore
+    processo.data_distribuicao = data.data_distribuicao  # type: ignore
     processo.save()
     return {
-        "message": f"Processo de numero {processo.numero_processo} e id {processo.processo_id} atualizado"
+        "message": f"Processo de numero {processo.numero_processo} "
+        f"e id {processo.processo_id} atualizado"
     }
 
 
@@ -320,8 +327,11 @@ def delete_processo(request, processo_id: str):
     try:
         processo = Processo.objects.get(processo_id=processo_id)
     except Processo.DoesNotExist:
-        raise Exception(404, "Processo não existe, certeza que este processo existe?")
+        raise HTTPException(
+            404, "Processo não existe, certeza que este processo existe?"
+        )
     processo.delete()
     return {
-        "message": f"Processo de numero {processo.numero_processo} e id {processo_id}  deletado"
+        "message": f"Processo de numero {processo.numero_processo} "
+        f"e id {processo_id}  deletado"
     }

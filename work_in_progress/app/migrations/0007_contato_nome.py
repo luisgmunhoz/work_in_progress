@@ -4,15 +4,16 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('app', '0006_auto_20231002_2244'),
+        ("app", "0006_auto_20231002_2244"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='contato',
-            name='nome',
-            field=models.CharField(default='nome', max_length=255, verbose_name='nome do contato'),
+            model_name="contato",
+            name="nome",
+            field=models.CharField(
+                default="nome", max_length=255, verbose_name="nome do contato"
+            ),
         ),
     ]
