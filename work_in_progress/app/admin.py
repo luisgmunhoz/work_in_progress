@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from work_in_progress.app.models import Company, Contato, Processo, SystemUser
+from work_in_progress.app.models import Company, Contato, SystemUser
 
 # Register your models here.
 admin.site.site_header = "Work in progress"

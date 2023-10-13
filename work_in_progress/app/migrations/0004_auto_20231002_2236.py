@@ -5,30 +5,55 @@ import work_in_progress.app.models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('app', '0003_auto_20231002_2222'),
+        ("app", "0003_auto_20231002_2222"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='company',
-            name='company_id',
-            field=models.CharField(default=work_in_progress.app.models.get_new_uuid_hex, editable=False, max_length=255, primary_key=True, serialize=False, unique=True),
+            model_name="company",
+            name="company_id",
+            field=models.CharField(
+                default=work_in_progress.app.models.get_new_uuid_hex,
+                editable=False,
+                max_length=255,
+                primary_key=True,
+                serialize=False,
+                unique=True,
+            ),
         ),
         migrations.AlterField(
-            model_name='contato',
-            name='contato_id',
-            field=models.CharField(default=work_in_progress.app.models.get_new_uuid_hex, editable=False, max_length=255, primary_key=True, serialize=False, unique=True),
+            model_name="contato",
+            name="contato_id",
+            field=models.CharField(
+                default=work_in_progress.app.models.get_new_uuid_hex,
+                editable=False,
+                max_length=255,
+                primary_key=True,
+                serialize=False,
+                unique=True,
+            ),
         ),
         migrations.AlterField(
-            model_name='processo',
-            name='processo_id',
-            field=models.CharField(default=work_in_progress.app.models.get_new_uuid_hex, editable=False, max_length=255, primary_key=True, serialize=False, unique=True),
+            model_name="processo",
+            name="processo_id",
+            field=models.CharField(
+                default=work_in_progress.app.models.get_new_uuid_hex,
+                editable=False,
+                max_length=255,
+                primary_key=True,
+                serialize=False,
+                unique=True,
+            ),
         ),
         migrations.AlterField(
-            model_name='systemuser',
-            name='secret',
-            field=models.CharField(default=work_in_progress.app.models.get_new_uuid_hex, editable=False, max_length=255, unique=True),
+            model_name="systemuser",
+            name="secret",
+            field=models.CharField(
+                default=work_in_progress.app.models.get_new_uuid_hex,
+                editable=False,
+                max_length=255,
+                unique=True,
+            ),
         ),
     ]

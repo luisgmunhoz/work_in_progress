@@ -1,7 +1,7 @@
 from django.urls import path
 from django.contrib import admin
 
-from work_in_progress.api import api
+from work_in_progress.app.api import api
 
 
 urlpatterns = [

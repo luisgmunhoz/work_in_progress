@@ -14,6 +14,24 @@ django-ninja = "^0.22.2"
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.2"
 black = "^23.9.1"
+flake8 = "^6.1.0"
+flake8-pyproject = "^1.2.3"
+mypy = "^1.6.0"
+
+
+[tool.poetry.group.test.dependencies]
+pytest = "^7.4.2"
+pytest-django = "^4.5.2"
+
+[tool.flake8]
+max-line-length = 88
+extend-ignore = ["E203", "W503"]
+
+[tool.mypy]
+python_version = "3.8"
+ignore_missing_imports = "true"
+files = ["work_in_progress"]
+
 
 [build-system]
 requires = ["poetry-core"]

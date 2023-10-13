@@ -5,12 +5,6 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "command": "cd frontend && npm run dev ",
-            "name": "subindo frontend",
-            "request": "launch",
-            "type": "node-terminal"
-        },
-        {
             "name": "Python: Current File",
             "type": "python",
             "request": "launch",
@@ -24,6 +18,15 @@
             "request": "launch",
             "program": "${workspaceFolder}/manage.py",
             "args": ["makemigrations"],
+            "django": true,
+            "justMyCode": true
+        },
+        {
+            "name": "Python: Django - test",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/manage.py",
+            "args": ["test", "--no-input"],
             "django": true,
             "justMyCode": true
         },

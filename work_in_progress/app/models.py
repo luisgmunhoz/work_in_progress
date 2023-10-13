@@ -1,38 +1,30 @@
 from datetime import datetime
-from typing import List
 import uuid
+from django.contrib.auth.models import AbstractUser
 from django.db import models
-from django.utils import timezone
 
 
 # Create your models here.
 def get_new_uuid_hex():
-    return f"{uuid.uuid4().hex}-{uuid.uuid4().hex}"
+    return f"{uuid.uuid4().hex}"
 
 
-class SystemUser(models.Model):
-    username: str = models.CharField(max_length=255)
-    password: str = models.CharField(max_length=255)
-    created_at: datetime = models.DateTimeField(auto_now_add=True)
-    updated_at: datetime = models.DateTimeField(auto_now=True)
+class SystemUser(AbstractUser):
     secret: str = models.CharField(
         max_length=255,
         default=get_new_uuid_hex,
         editable=False,
         unique=True,
     )
-    is_active: bool = models.BooleanField(default=True)
-    is_superuser: bool = models.BooleanField(default=False)
-    is_staff: bool = models.BooleanField(default=False)
-
-    def __str__(self) -> str:
-        return self.username
 
     class Meta:
-        db_table: str = "system_user"
-        verbose_name: str = "System User"
-        verbose_name_plural: str = "System Users"
-        ordering: List[str] = ["-created_at"]
+        db_table = "system_user"
+
+
+SystemUser._meta.get_field("groups").remote_field.related_name = "system_users_groups"
+SystemUser._meta.get_field(
+    "user_permissions"
+).remote_field.related_name = "system_users_permissions"
 
 
 class Contato(models.Model):
