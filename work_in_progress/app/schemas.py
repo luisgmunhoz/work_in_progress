@@ -1,8 +1,6 @@
 from datetime import datetime
 from typing import Dict, List, Type
-from ninja import ModelSchema, Schema
-
-from work_in_progress.app.models import Company, Contato, Processo
+from ninja import Schema
 
 
 class LoginSchema(Schema):
@@ -60,10 +58,18 @@ responses_dict: Dict[int, Type[Schema]] = {
 }
 
 
-class ContatoSchema(ModelSchema):
-    class Config:
-        model = Contato
-        model_exclude = ["criado_por", "contato_id"]
+class ContatoSchema(Schema):
+    nome: str
+    endereco: str
+    numero: str
+    complemento: str
+    bairro: str
+    cidade: str
+    estado: str
+    cep: str
+    telefone: str
+    email_responsavel: str
+    email_cobranca: str
 
 
 class ContatosSchema(Schema):
@@ -85,10 +91,16 @@ class ContatosSchema(Schema):
     ]
 
 
-class CompanySchema(ModelSchema):
-    class Config:
-        model = Company
-        model_exclude = ["criado_por", "company_id"]
+class CompanySchema(Schema):
+    cnpj: str
+    razao_social: str
+    nome_fantasia: str
+    inscricao_estadual: str
+    inscricao_municipal: str
+    criado_em: datetime
+    atualizado_em: datetime
+    ativo: bool
+    contato_id: str
 
 
 class CompaniesSchema(Schema):
@@ -108,16 +120,27 @@ class CompaniesSchema(Schema):
     ]
 
 
-class ProcessoSchema(ModelSchema):
-    class Config:
-        model = Processo
-        model_exclude = ["criado_por", "processo_id"]
+class ProcessoSchema(Schema):
+    advogado_responsavel: str
+    cliente: str
+    numero_processo: str
+    vara: str
+    comarca: str
+    estado: str
+    status: str
+    fase: str
+    valor_causa: float
+    valor_condenacao: float
+    valor_honorario: float
+    valor_preposto: float
+    valor_total: float
+    data_distribuicao: datetime
+    ativo: bool
 
 
 class ProcessosSchema(Schema):
     processos: List[ProcessoSchema] = [
         ProcessoSchema(
-            processo_id="1",
             advogado_responsavel="Advogado responsável teste",
             cliente="Cliente teste",
             numero_processo="123456789",
@@ -132,8 +155,7 @@ class ProcessosSchema(Schema):
             valor_preposto=250.0,
             valor_total=260.0,
             data_distribuicao=datetime.now(),
-            criado_em=datetime.now(),
-            atualizado_em=datetime.now(),
+            ativo=True,
         )
     ]
 
