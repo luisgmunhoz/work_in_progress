@@ -28,11 +28,11 @@ pytest-django = "^4.5.2"
 [tool.flake8]
 max-line-length = 88
 extend-ignore = ["E203", "W503"]
-
+files = ["work_in_progress"]
 [tool.isort]
 profile = "black"
 extra_standard_library = ["pytest"]
-
+src_paths = ["work_in_progress"]
 [tool.mypy]
 python_version = "3.8"
 ignore_missing_imports = "true"
