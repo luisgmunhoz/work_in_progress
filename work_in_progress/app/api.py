@@ -1,17 +1,19 @@
 from typing import Optional
+
 from ninja import NinjaAPI
 from ninja.security import APIKeyHeader
+
 from work_in_progress.app.models import Company, Contato, Processo, SystemUser
 from work_in_progress.app.schemas import (
-    LoginSchema,
-    responses_dict,
-    login_responses_dict,
-    ContatoSchema,
     CompanySchema,
+    ContatoSchema,
+    LoginSchema,
     ProcessoSchema,
+    login_responses_dict,
     response_get_companies,
-    response_get_processos,
     response_get_contatos,
+    response_get_processos,
+    responses_dict,
 )
 
 

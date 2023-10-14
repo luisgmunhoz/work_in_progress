@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import Dict, List, Type
+
 from ninja import Schema
 
 

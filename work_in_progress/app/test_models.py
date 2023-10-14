@@ -1,9 +1,12 @@
+import uuid
+
+from django.db.utils import IntegrityError
 from django.test import TestCase
 from django.utils import timezone
-from django.db.utils import IntegrityError
+
 from work_in_progress.app.models import models
-from .models import SystemUser, Contato, Company, Processo
-import uuid
+
+from .models import Company, Contato, Processo, SystemUser
 
 
 class SystemUserModelTest(TestCase):
