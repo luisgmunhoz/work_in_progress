@@ -1,2 +1,2 @@
 # Project name: ?
-## Django rest framework on backend and next ts on frontend
+## Django ninja on backend and something on frontend
