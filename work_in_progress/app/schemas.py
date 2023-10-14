@@ -98,8 +98,6 @@ class CompanySchema(Schema):
     nome_fantasia: str
     inscricao_estadual: str
     inscricao_municipal: str
-    criado_em: datetime
-    atualizado_em: datetime
     ativo: bool
     contato_id: str
 
@@ -113,8 +111,6 @@ class CompaniesSchema(Schema):
             nome_fantasia="Nome fantasia teste",
             inscricao_estadual="123456789",
             inscricao_municipal="123456789",
-            criado_em=datetime.now(),
-            atualizado_em=datetime.now(),
             ativo=True,
             contato_id="1",
         )
@@ -161,9 +157,29 @@ class ProcessosSchema(Schema):
     ]
 
 
+class ProdutoSchema(Schema):
+    nome: str
+    descricao: str
+    preco: float
+    quantidade: int
+
+
+class ProdutosSchema(Schema):
+    produtos: List[ProdutoSchema] = [
+        ProdutoSchema(
+            nome="Barril",
+            descricao="Barril 20 Litros",
+            preco=5.4,
+            quantidade=2,
+        )
+    ]
+
+
 response_get_processos = responses_dict.copy()
 response_get_processos.update({200: ProcessosSchema})
 response_get_companies = responses_dict.copy()
 response_get_companies.update({200: CompaniesSchema})
 response_get_contatos = responses_dict.copy()
 response_get_contatos.update({200: ContatosSchema})
+response_get_produtos = responses_dict.copy()
+response_get_produtos.update({200: ProdutosSchema})

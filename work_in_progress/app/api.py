@@ -3,16 +3,18 @@ from typing import Optional
 from ninja import NinjaAPI
 from ninja.security import APIKeyHeader
 
-from work_in_progress.app.models import Company, Contato, Processo, SystemUser
+from work_in_progress.app.models import Company, Contato, Processo, Produto, SystemUser
 from work_in_progress.app.schemas import (
     CompanySchema,
     ContatoSchema,
     LoginSchema,
     ProcessoSchema,
+    ProdutoSchema,
     login_responses_dict,
     response_get_companies,
     response_get_contatos,
     response_get_processos,
+    response_get_produtos,
     responses_dict,
 )
 
@@ -123,11 +125,13 @@ def create_contato(request, data: ContatoSchema):
 )
 def update_contato(request, contato_id: str, data: ContatoSchema):
     try:
-        contato = Contato.objects.get(contato_id=contato_id)
+        contato = Contato.objects.filter(criado_por=request.auth).get(
+            contato_id=contato_id
+        )
     except Exception:
         raise HTTPException(404, "Contato não existe")
     try:
-        contato_responsavel = Contato.objects.get(
+        contato_responsavel = Contato.objects.filter(criado_por=request.auth).get(
             email_responsavel=data.email_responsavel
         )
     except Contato.DoesNotExist:
@@ -157,7 +161,9 @@ def update_contato(request, contato_id: str, data: ContatoSchema):
 )
 def delete_contato(request, contato_id: str):
     try:
-        contato = Contato.objects.get(contato_id=contato_id)
+        contato = Contato.objects.filter(criado_por=request.auth).get(
+            contato_id=contato_id
+        )
     except Contato.DoesNotExist:
         raise HTTPException(404, "Contato não existe, certeza que este contato existe?")
     contato.delete()
@@ -196,7 +202,9 @@ def create_company(request, data: CompanySchema):
             raise HTTPException(400, "Company já existe")
     except Company.DoesNotExist:
         try:
-            contato = Contato.objects.get(contato_id=data.contato_id)
+            contato = Contato.objects.filter(criado_por=request.auth).get(
+                contato_id=data.contato_id
+            )
         except Contato.DoesNotExist:
             raise HTTPException(404, "Contato não existe")
 
@@ -225,11 +233,15 @@ def create_company(request, data: CompanySchema):
 )
 def update_companies(request, company_id: str, data: CompanySchema):
     try:
-        company = Company.objects.get(company_id=company_id)
+        company = Company.objects.filter(criado_por=request.auth).get(
+            company_id=company_id
+        )
     except Company.DoesNotExist:
         raise HTTPException(404, "Company não existe")
     try:
-        contato = Contato.objects.get(contato_id=data.contato_id)
+        contato = Contato.objects.filter(criado_por=request.auth).get(
+            contato_id=data.contato_id
+        )
     except Contato.DoesNotExist:
         raise HTTPException(404, "Contato não existe")
 
@@ -253,7 +265,9 @@ def update_companies(request, company_id: str, data: CompanySchema):
 )
 def delete_companies(request, company_id: str):
     try:
-        company = Company.objects.get(company_id=company_id)
+        company = Company.objects.filter(criado_por=request.auth).get(
+            company_id=company_id
+        )
     except Company.DoesNotExist:
         raise HTTPException(404, "Company não existe, certeza que esta company existe?")
     company.delete()
@@ -301,7 +315,9 @@ def create_processo(request, data: ProcessoSchema):
     tags=["processos"],
 )
 def update_processo(request, processo_id: str, data: ProcessoSchema):
-    processo = Processo.objects.get(processo_id=processo_id)
+    processo = Processo.objects.filter(criado_por=request.auth).get(
+        processo_id=processo_id
+    )
     processo.advogado_responsavel = data.advogado_responsavel
     processo.cliente = data.cliente
     processo.numero_processo = data.numero_processo
@@ -330,7 +346,9 @@ def update_processo(request, processo_id: str, data: ProcessoSchema):
 )
 def delete_processo(request, processo_id: str):
     try:
-        processo = Processo.objects.get(processo_id=processo_id)
+        processo = Processo.objects.filter(criado_por=request.auth).get(
+            processo_id=processo_id
+        )
     except Processo.DoesNotExist:
         raise HTTPException(
             404, "Processo não existe, certeza que este processo existe?"
@@ -339,4 +357,79 @@ def delete_processo(request, processo_id: str):
     return {
         "message": f"Processo de numero {processo.numero_processo} "
         f"e id {processo_id}  deletado"
+    }
+
+
+# PRODUTO
+
+
+@api.post("/produtos", response=responses_dict, tags=["produtos"])
+def create_produto(request, data: ProdutoSchema):
+    produto = Produto.objects.create(**data.dict(), criado_por=request.auth)
+    return {
+        "message": f"Produto de nome {produto.nome} "
+        f"e id {produto.id_produto} criado"
+    }
+
+
+@api.get("/produtos", response=response_get_produtos, tags=["produtos"])
+def get_produtos(request):
+    if request.auth.is_superuser:
+        produtos = Produto.objects.all()
+    else:
+        produtos = Produto.objects.filter(criado_por=request.auth)
+    if produtos:
+        return 200, {
+            "produtos": [ProdutoSchema.from_orm(produto).dict() for produto in produtos]
+        }
+    else:
+        return 204, {"message": "No content"}
+
+
+@api.get("/produtos/{produto_id}", response=ProdutoSchema, tags=["produtos"])
+def get_produto(request, produto_id: str):
+    """
+    Pega um produto pelo id
+    """
+    try:
+        produto = Produto.objects.filter(criado_por=request.auth).get(
+            id_produto=produto_id
+        )
+        if produto:
+            return ProdutoSchema.from_orm(produto)
+    except Produto.DoesNotExist:
+        raise HTTPException(status_code=404, message="Produto não encontrado")
+
+
+@api.put("/produtos/{produto_id}", response=responses_dict, tags=["produtos"])
+def update_produto(request, produto_id: str, data: ProdutoSchema):
+    try:
+        produto = Produto.objects.filter(criado_por=request.auth).get(
+            id_produto=produto_id
+        )
+    except Produto.DoesNotExist:
+        raise HTTPException(status_code=404, message="Produto não encontrado")
+    produto.nome = data.nome
+    produto.descricao = data.descricao
+    produto.preco = data.preco
+    produto.quantidade = data.quantidade
+    produto.save()
+    return 200, {
+        "message": f"Produto de nome {produto.nome} e id {produto_id} "
+        "atualizado com sucesso"
+    }
+
+
+@api.delete("/produtos/{produto_id}", tags=["produtos"])
+def delete_produto(request, produto_id: str):
+    try:
+        produto = Produto.objects.filter(criado_por=request.auth).get(
+            id_produto=produto_id
+        )
+    except Produto.DoesNotExist:
+        raise HTTPException(status_code=404, message="Produto não encontrado")
+    nome = produto.nome
+    produto.delete()
+    return 200, {
+        "message": f"Produto de nome {nome} e id {produto_id} deletado com sucesso"
     }
