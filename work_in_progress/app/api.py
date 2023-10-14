@@ -22,7 +22,7 @@ class ApiKey(APIKeyHeader):
         if key in SystemUser.objects.values_list("secret", flat=True):
             system_user = SystemUser.objects.get(secret=key)
             return system_user
-        raise HTTPException(403, "Invalid Credentials")
+        raise HTTPException(401, "Unauthorized")
 
 
 header_key = ApiKey()
@@ -46,12 +46,12 @@ class HTTPException(Exception):
         self.message = message
 
 
-@api.exception_handler(HTTPException)
+@api.exception_handler(Exception)
 def base_exception(request, exc):
     return api.create_response(
         request,
-        {"message": exc.message},
-        status=exc.status_code,
+        {"message": exc.message if exc.message else "Internal server error"},
+        status=exc.status_code if exc.status_code else 500,
     )
 
 
@@ -61,10 +61,10 @@ def authenticate(request, username: str, password: str) -> Optional[str]:
         if user.password == password:
             return user.secret
         else:
-            raise HTTPException(403, "Invalid Credentials")
+            raise HTTPException(401, "Invalid Credentials")
 
     except SystemUser.DoesNotExist:
-        raise HTTPException(403, "Invalid Credentials")
+        raise HTTPException(401, "Invalid Credentials")
 
 
 @api.post("/login", auth=None, response=login_responses_dict, tags=["login"])
@@ -80,7 +80,7 @@ def login(request, data: LoginSchema):
     if x_api_key is not None:
         return 200, {"message": "Logged in succesfully", "x_api_key": x_api_key}
     else:
-        raise HTTPException(403, "Invalid credentials")
+        raise HTTPException(401, "Invalid Credentials")
 
 
 @api.get("/contatos", response=response_get_contatos, tags=["contatos"])

@@ -27,6 +27,10 @@ class Default400(Schema):
     message: str = "Bad Request"
 
 
+class Default401(Schema):
+    message: str = "Unauthorized"
+
+
 class Default403(Schema):
     message: str = "Forbidden"
 
@@ -39,12 +43,15 @@ class Default500(Schema):
     message: str = "Internal Server Error"
 
 
-login_responses_dict: Dict[int, Type[LoginSuccess]] = {
+login_responses_dict: Dict[int, Type[Schema]] = {
     200: LoginSuccess,
+    401: Default401,
+    500: Default500,
 }
 
 responses_dict: Dict[int, Type[Schema]] = {
     200: Default200,
+    401: Default401,
     204: Default204,
     400: Default400,
     403: Default403,
