@@ -54,4 +54,4 @@ jobs:
         PG_DATABASE: postgres
         PG_PORT: 5432
       run: |
-        python manage.py test
+        python3 manage.py test
