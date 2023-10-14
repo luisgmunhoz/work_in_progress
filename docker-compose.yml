@@ -22,6 +22,16 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: '512M'
+        reservations:
+          cpus: '0.2'
+          memory: '256M'
+    
   migrate:
     build:
       context: .
@@ -41,7 +51,16 @@ services:
       - PG_PASSWORD=postgres
       - PG_DATABASE=postgres
       - PG_PORT=5432
-  back:
+    restart: on-failure
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: '512M'
+        reservations:
+          cpus: '0.2'
+          memory: '256M'
+  app:
     build: 
       context: .
       dockerfile: Dockerfile
@@ -63,6 +82,15 @@ services:
       - PG_PORT=5432
     networks:
       - app-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: '1G'
+        reservations:
+          cpus: '0.5'
+          memory: '512M'
 networks:
   app-network:
 
