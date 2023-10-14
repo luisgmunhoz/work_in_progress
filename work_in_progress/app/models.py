@@ -112,3 +112,22 @@ class Processo(models.Model):
     criado_em: datetime = models.DateTimeField(auto_now_add=True)
     atualizado_em: datetime = models.DateTimeField(auto_now=True)
     ativo: bool = models.BooleanField(default=True)
+
+
+class Produto(models.Model):
+    id_produto: str = models.CharField(
+        max_length=255,
+        default=get_new_uuid_hex,
+        editable=False,
+        unique=True,
+        primary_key=True,
+    )
+    nome: str = models.CharField(max_length=255, blank=False, null=True)
+    descricao: str = models.CharField(max_length=255)
+    preco: float = models.DecimalField(max_digits=10, decimal_places=2)
+    quantidade: int = models.IntegerField()
+    criado_por: SystemUser = models.ForeignKey(
+        SystemUser, on_delete=models.CASCADE, related_name="produtos"
+    )
+    criado_em: datetime = models.DateTimeField(auto_now_add=True)
+    atualizado_em: datetime = models.DateTimeField(auto_now=True)
