@@ -31,18 +31,18 @@ services:
         reservations:
           cpus: '0.2'
           memory: '256M'
-    
+
   migrate:
     build:
       context: .
       dockerfile: Dockerfile
-    command:  python3 manage.py migrate --noinput 
+    command:  python3 manage.py migrate --noinput
     depends_on:
       db:
         condition: service_healthy
     networks:
       - app-network
-    
+
     env_file:
       - .env
     environment:
@@ -61,7 +61,7 @@ services:
           cpus: '0.2'
           memory: '256M'
   app:
-    build: 
+    build:
       context: .
       dockerfile: Dockerfile
     command: python3 manage.py runserver 0.0.0.0:8000
