@@ -17,6 +17,8 @@ black = "^23.9.1"
 flake8 = "^6.1.0"
 flake8-pyproject = "^1.2.3"
 mypy = "^1.6.0"
+pre-commit = "^3.5.0"
+isort = "^5.12.0"
 
 
 [tool.poetry.group.test.dependencies]
@@ -26,6 +28,10 @@ pytest-django = "^4.5.2"
 [tool.flake8]
 max-line-length = 88
 extend-ignore = ["E203", "W503"]
+
+[tool.isort]
+profile = "black"
+extra_standard_library = ["pytest"]
 
 [tool.mypy]
 python_version = "3.8"
