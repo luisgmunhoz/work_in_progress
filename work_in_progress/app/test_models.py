@@ -10,13 +10,13 @@ from .models import Company, Contato, Processo, SystemUser
 
 
 class SystemUserModelTest(TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.user = SystemUser.objects.create_user(
             username="testuser",
             password="testpass",
         )
 
-    def test_secret_field(self):
+    def test_secret_field(self) -> None:
         """
         Test that the secret field is generated with a UUID and is unique.
         """
@@ -29,7 +29,7 @@ class SystemUserModelTest(TestCase):
             secret=self.user.secret,
         )
 
-    def test_system_users_groups_related_name(self):
+    def test_system_users_groups_related_name(self) -> None:
         """
         Test that the related name of the groups field
         in the SystemUser model is set to 'system_users_groups'.
@@ -37,7 +37,7 @@ class SystemUserModelTest(TestCase):
         field = SystemUser._meta.get_field("groups")
         self.assertEqual(field.remote_field.related_name, "system_users_groups")
 
-    def test_system_users_permissions_related_name(self):
+    def test_system_users_permissions_related_name(self) -> None:
         """
         Test that the related name of the user_permissions field in
         the SystemUser model is set to 'system_users_permissions'.
@@ -47,7 +47,7 @@ class SystemUserModelTest(TestCase):
 
 
 class ContatoModelTest(TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.user = SystemUser.objects.create_user(
             username="testuser",
             password="testpass",
@@ -67,7 +67,7 @@ class ContatoModelTest(TestCase):
             criado_por=self.user,
         )
 
-    def test_contato_id_field(self):
+    def test_contato_id_field(self) -> None:
         """
         Test that the contato_id field is generated with a UUID and is unique.
         """
@@ -80,7 +80,7 @@ class ContatoModelTest(TestCase):
             contato_id=self.contato.contato_id,
         )
 
-    def test_contato_nome_field(self):
+    def test_contato_nome_field(self) -> None:
         """
         Test that the nome field is required and cannot be blank or null.
         """
@@ -88,7 +88,7 @@ class ContatoModelTest(TestCase):
         self.assertFalse(field.blank)
         self.assertFalse(field.null)
 
-    def test_contato_criado_por_field(self):
+    def test_contato_criado_por_field(self) -> None:
         """
         Test that the criado_por field is a foreign key to the
         SystemUser model with a related name of 'contatos'.
@@ -100,7 +100,7 @@ class ContatoModelTest(TestCase):
 
 
 class CompanyModelTest(TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.user = SystemUser.objects.create_user(
             username="testuser",
             password="testpass",
@@ -129,7 +129,7 @@ class CompanyModelTest(TestCase):
             contato=self.contato,
         )
 
-    def test_company_id_field(self):
+    def test_company_id_field(self) -> None:
         """
         Test that the company_id field is generated with a UUID and is unique.
         """
@@ -142,7 +142,7 @@ class CompanyModelTest(TestCase):
             company_id=self.company.company_id,
         )
 
-    def test_company_criado_por_field(self):
+    def test_company_criado_por_field(self) -> None:
         """
         Test that the criado_por field is a foreign key to
         the SystemUser model with a related name of 'companies'.
@@ -152,7 +152,7 @@ class CompanyModelTest(TestCase):
         self.assertEqual(field.remote_field.model, SystemUser)
         self.assertEqual(field.remote_field.related_name, "companies")
 
-    def test_company_contato_field(self):
+    def test_company_contato_field(self) -> None:
         """
         Test that the contato field is a foreign key to the
         Contato model with a related name of 'companies'.
@@ -164,7 +164,7 @@ class CompanyModelTest(TestCase):
 
 
 class ProcessoModelTest(TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.user = SystemUser.objects.create_user(
             username="testuser",
             password="testpass",
@@ -201,7 +201,7 @@ class ProcessoModelTest(TestCase):
             criado_por=self.user,
         )
 
-    def test_processo_id_field(self):
+    def test_processo_id_field(self) -> None:
         """
         Test that the processo_id field is generated with a UUID and is unique.
         """
@@ -214,7 +214,7 @@ class ProcessoModelTest(TestCase):
             processo_id=self.processo.processo_id,
         )
 
-    def test_processo_criado_por_field(self):
+    def test_processo_criado_por_field(self) -> None:
         """
         Test that the criado_por field is a foreign key to the SystemUser
         model with a related name of 'processos'.
@@ -224,7 +224,7 @@ class ProcessoModelTest(TestCase):
         self.assertEqual(field.remote_field.model, SystemUser)
         self.assertEqual(field.remote_field.related_name, "processos")
 
-    def test_processo_valor_fields(self):
+    def test_processo_valor_fields(self) -> None:
         """
         Test that the valor fields are required and cannot be null.
         """

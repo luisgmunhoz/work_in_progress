@@ -6,7 +6,7 @@ from django.db import models
 
 
 # Create your models here.
-def get_new_uuid_hex():
+def get_new_uuid_hex() -> str:
     return f"{uuid.uuid4().hex}"
 
 

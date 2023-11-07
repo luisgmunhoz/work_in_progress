@@ -1,7 +1,9 @@
-from typing import Optional
+from typing import Any, Dict, List, Optional, Tuple, Union
 
+from django.db.models import QuerySet
 from ninja import NinjaAPI
 from ninja.security import APIKeyHeader
+from requests import Request
 
 from work_in_progress.app.models import Company, Contato, Processo, Produto, SystemUser
 from work_in_progress.app.schemas import (
@@ -22,7 +24,9 @@ from work_in_progress.app.schemas import (
 class ApiKey(APIKeyHeader):
     param_name = "X-API-Key"
 
-    def authenticate(self, request, key: Optional[str]) -> Optional[SystemUser]:
+    def authenticate(
+        self, request: Request, key: Optional[str]
+    ) -> Optional[SystemUser]:
         if key in SystemUser.objects.values_list("secret", flat=True):
             system_user = SystemUser.objects.get(secret=key)
             return system_user
@@ -51,7 +55,7 @@ class HTTPException(Exception):
 
 
 @api.exception_handler(Exception)
-def base_exception(request, exc):
+def base_exception(request: Request, exc: HTTPException) -> None:
     try:
         exception_message = exc.message if exc.message else "Internal server error"
     except Exception:
@@ -63,7 +67,7 @@ def base_exception(request, exc):
     return api.create_response(request, {"message": exception_message}, status=status)
 
 
-def authenticate(request, username: str, password: str) -> Optional[str]:
+def authenticate(request: Request, username: str, password: str) -> Optional[str]:
     try:
         user = SystemUser.objects.get(username=username)
         if user.password == password:
@@ -76,7 +80,7 @@ def authenticate(request, username: str, password: str) -> Optional[str]:
 
 
 @api.post("/login", auth=None, response=login_responses_dict, tags=["login"])
-def login(request, data: LoginSchema):
+def login(request: Request, data: LoginSchema) -> Tuple[int, Dict[str, str]]:
     """
     Logar no sistema
 
@@ -92,7 +96,7 @@ def login(request, data: LoginSchema):
 
 
 @api.get("/contatos", response=response_get_contatos, tags=["contatos"])
-def get_contatos(request):
+def get_contatos(request: Request) -> Tuple[int, Dict[str, Any]]:
     if request.auth.is_superuser:
         contatos = Contato.objects.all()
     else:
@@ -106,7 +110,7 @@ def get_contatos(request):
 
 
 @api.post("/contatos", response=responses_dict, tags=["contatos"])
-def create_contato(request, data: ContatoSchema):
+def create_contato(request: Request, data: ContatoSchema) -> Dict[str, str]:
     try:
         contato = Contato.objects.get(email_responsavel=data.email_responsavel)
         raise HTTPException(400, "Contato já existe")
@@ -123,17 +127,19 @@ def create_contato(request, data: ContatoSchema):
     response=responses_dict,
     tags=["contatos"],
 )
-def update_contato(request, contato_id: str, data: ContatoSchema):
+def update_contato(
+    request: Request, contato_id: str, data: ContatoSchema
+) -> Dict[str, str]:
     try:
-        contato = Contato.objects.filter(criado_por=request.auth).get(
+        contato: Contato = Contato.objects.filter(criado_por=request.auth).get(
             contato_id=contato_id
         )
     except Exception:
         raise HTTPException(404, "Contato não existe")
     try:
-        contato_responsavel = Contato.objects.filter(criado_por=request.auth).get(
-            email_responsavel=data.email_responsavel
-        )
+        contato_responsavel: Optional[Contato] = Contato.objects.filter(
+            criado_por=request.auth
+        ).get(email_responsavel=data.email_responsavel)
     except Contato.DoesNotExist:
         contato_responsavel = None
     if contato_responsavel and contato_responsavel.contato_id != contato.contato_id:
@@ -159,9 +165,9 @@ def update_contato(request, contato_id: str, data: ContatoSchema):
     response=responses_dict,
     tags=["contatos"],
 )
-def delete_contato(request, contato_id: str):
+def delete_contato(request: Request, contato_id: str) -> Dict[str, str]:
     try:
-        contato = Contato.objects.filter(criado_por=request.auth).get(
+        contato: Contato = Contato.objects.filter(criado_por=request.auth).get(
             contato_id=contato_id
         )
     except Contato.DoesNotExist:
@@ -175,8 +181,11 @@ def delete_contato(request, contato_id: str):
     response=response_get_companies,
     tags=["companies"],
 )
-def get_companies(request):
+def get_companies(
+    request: Request,
+) -> Tuple[int, Dict[str, Union[str, List[Dict[str, Union[str, int, float, bool]]]]]]:
     if request.auth.is_superuser:
+        companies: QuerySet[Company]
         companies = Company.objects.all()
     else:
         companies = Company.objects.filter(criado_por=request.auth)
@@ -195,7 +204,7 @@ def get_companies(request):
     response=responses_dict,
     tags=["companies"],
 )
-def create_company(request, data: CompanySchema):
+def create_company(request: Request, data: CompanySchema) -> Optional[Dict[str, str]]:
     try:
         company = Company.objects.get(cnpj=data.cnpj)
         if company:
@@ -224,6 +233,7 @@ def create_company(request, data: CompanySchema):
             }
         except Exception as e:
             raise HTTPException(400, str(e))
+    return None
 
 
 @api.put(
@@ -231,7 +241,9 @@ def create_company(request, data: CompanySchema):
     response=responses_dict,
     tags=["companies"],
 )
-def update_companies(request, company_id: str, data: CompanySchema):
+def update_companies(
+    request: Request, company_id: str, data: CompanySchema
+) -> Dict[str, str]:
     try:
         company = Company.objects.filter(criado_por=request.auth).get(
             company_id=company_id
@@ -263,7 +275,7 @@ def update_companies(request, company_id: str, data: CompanySchema):
     response=responses_dict,
     tags=["companies"],
 )
-def delete_companies(request, company_id: str):
+def delete_companies(request: Request, company_id: str) -> Dict[str, str]:
     try:
         company = Company.objects.filter(criado_por=request.auth).get(
             company_id=company_id
@@ -281,7 +293,9 @@ def delete_companies(request, company_id: str):
     response=response_get_processos,
     tags=["processos"],
 )
-def get_processos(request):
+def get_processos(
+    request: Request,
+) -> Tuple[int, Dict[str, Union[str, List[Dict[str, Union[str, int, float, bool]]]]]]:
     if request.auth.is_superuser:
         processos = Processo.objects.all()
     else:
@@ -301,7 +315,7 @@ def get_processos(request):
     response=responses_dict,
     tags=["processos"],
 )
-def create_processo(request, data: ProcessoSchema):
+def create_processo(request: Request, data: ProcessoSchema) -> Dict[str, str]:
     processo = Processo.objects.create(**data.dict(), criado_por=request.auth)
     return {
         "message": f"Processo de numero {processo.numero_processo} "
@@ -314,7 +328,9 @@ def create_processo(request, data: ProcessoSchema):
     response=responses_dict,
     tags=["processos"],
 )
-def update_processo(request, processo_id: str, data: ProcessoSchema):
+def update_processo(
+    request: Request, processo_id: str, data: ProcessoSchema
+) -> Dict[str, str]:
     processo = Processo.objects.filter(criado_por=request.auth).get(
         processo_id=processo_id
     )
@@ -344,7 +360,7 @@ def update_processo(request, processo_id: str, data: ProcessoSchema):
     response=responses_dict,
     tags=["processos"],
 )
-def delete_processo(request, processo_id: str):
+def delete_processo(request: Request, processo_id: str) -> Dict[str, str]:
     try:
         processo = Processo.objects.filter(criado_por=request.auth).get(
             processo_id=processo_id
@@ -364,7 +380,7 @@ def delete_processo(request, processo_id: str):
 
 
 @api.post("/produtos", response=responses_dict, tags=["produtos"])
-def create_produto(request, data: ProdutoSchema):
+def create_produto(request: Request, data: ProdutoSchema) -> Dict[str, str]:
     produto = Produto.objects.create(**data.dict(), criado_por=request.auth)
     return {
         "message": f"Produto de nome {produto.nome} "
@@ -373,7 +389,10 @@ def create_produto(request, data: ProdutoSchema):
 
 
 @api.get("/produtos", response=response_get_produtos, tags=["produtos"])
-def get_produtos(request):
+def get_produtos(
+    request: Request,
+) -> Tuple[int, Dict[str, Union[str, List[Dict[str, Union[str, int, float, bool]]]]]]:
+    produtos: QuerySet[Produto]
     if request.auth.is_superuser:
         produtos = Produto.objects.all()
     else:
@@ -387,24 +406,24 @@ def get_produtos(request):
 
 
 @api.get("/produtos/{produto_id}", response=ProdutoSchema, tags=["produtos"])
-def get_produto(request, produto_id: str):
-    """
-    Pega um produto pelo id
-    """
+def get_produto(request: Request, produto_id: str) -> Optional[ProdutoSchema]:
     try:
-        produto = Produto.objects.filter(criado_por=request.auth).get(
+        produto: Produto = Produto.objects.filter(criado_por=request.auth).get(
             id_produto=produto_id
         )
         if produto:
             return ProdutoSchema.from_orm(produto)
+        return None
     except Produto.DoesNotExist:
         raise HTTPException(status_code=404, message="Produto não encontrado")
 
 
 @api.put("/produtos/{produto_id}", response=responses_dict, tags=["produtos"])
-def update_produto(request, produto_id: str, data: ProdutoSchema):
+def update_produto(
+    request: Request, produto_id: str, data: ProdutoSchema
+) -> Tuple[int, Dict[str, str]]:
     try:
-        produto = Produto.objects.filter(criado_por=request.auth).get(
+        produto: Produto = Produto.objects.filter(criado_por=request.auth).get(
             id_produto=produto_id
         )
     except Produto.DoesNotExist:
@@ -421,9 +440,9 @@ def update_produto(request, produto_id: str, data: ProdutoSchema):
 
 
 @api.delete("/produtos/{produto_id}", tags=["produtos"])
-def delete_produto(request, produto_id: str):
+def delete_produto(request: Request, produto_id: str) -> Tuple[int, Dict[str, str]]:
     try:
-        produto = Produto.objects.filter(criado_por=request.auth).get(
+        produto: Produto = Produto.objects.filter(criado_por=request.auth).get(
             id_produto=produto_id
         )
     except Produto.DoesNotExist:

@@ -1,0 +1,98 @@
+services:
+  db:
+    image: postgres:latest
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_HOST=localhost
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DATABASE=postgres
+      - POSTGRES_PORT=5432
+    logging:
+          options:
+            max-size: 10m
+            max-file: "3"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $PG_USER -d $PG_DATABASE"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: '512M'
+        reservations:
+          cpus: '0.2'
+          memory: '256M'
+
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command:  python3 manage.py migrate --noinput
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - app-network
+
+    env_file:
+      - .env
+    environment:
+      - PG_HOST=db
+      - PG_USER=postgres
+      - PG_PASSWORD=postgres
+      - PG_DATABASE=postgres
+      - PG_PORT=5432
+    restart: on-failure
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: '512M'
+        reservations:
+          cpus: '0.2'
+          memory: '256M'
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: gunicorn work_in_progress.wsgi:application --workers 3 --bind 0.0.0.0:8000
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    ports:
+      - 8000:8000
+    env_file:
+      - .env
+    environment:
+      - PG_HOST=db
+      - PG_USER=postgres
+      - PG_PASSWORD=postgres
+      - PG_DATABASE=postgres
+      - PG_PORT=5432
+    networks:
+      - app-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: '1G'
+        reservations:
+          cpus: '0.5'
+          memory: '512M'
+networks:
+  app-network:
+
+volumes:
+  pgdata:
