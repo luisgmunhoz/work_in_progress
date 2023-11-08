@@ -11,7 +11,7 @@ class LoginSchema(Schema):
 
 class LoginSuccess(Schema):
     message: str = "Logged in succesfully"
-    x_api_key: str = "010302039e09djsja-anasdjasiaosqos"
+    token: str
 
 
 class Default200(Schema):
