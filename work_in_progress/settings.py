@@ -128,3 +128,6 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+ALGORITHM = "HS256"
+SECRET_KEY = os.environ["SECRET_KEY"]
+ACCESS_TOKEN_EXPIRE_MINUTES = 30

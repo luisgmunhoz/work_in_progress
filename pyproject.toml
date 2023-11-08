@@ -12,6 +12,7 @@ psycopg2-binary = "^2.9.8"
 django-ninja = "^0.22.2"
 gunicorn = "^21.2.0"
 types-requests = "^2.31.0.10"
+pyjwt = "^2.8.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.2"

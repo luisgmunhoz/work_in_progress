@@ -1,8 +1,9 @@
 from typing import Any, Dict, List, Optional, Tuple, Union
 
+import jwt
 from django.db.models import QuerySet
 from ninja import NinjaAPI
-from ninja.security import APIKeyHeader
+from ninja.security import HttpBearer
 from requests import Request
 
 from work_in_progress.app.models import Company, Contato, Processo, Produto, SystemUser
@@ -19,29 +20,68 @@ from work_in_progress.app.schemas import (
     response_get_produtos,
     responses_dict,
 )
+from work_in_progress.settings import ACCESS_TOKEN_EXPIRE_MINUTES, ALGORITHM, SECRET_KEY
 
 
-class ApiKey(APIKeyHeader):
-    param_name = "X-API-Key"
+class JWTAuth(HttpBearer):
+    """
+    JWTAuth class that extends HttpBearer.
+    It overrides the authenticate method to provide JWT token based authentication.
+    """
 
-    def authenticate(
-        self, request: Request, key: Optional[str]
-    ) -> Optional[SystemUser]:
-        if key in SystemUser.objects.values_list("secret", flat=True):
-            system_user = SystemUser.objects.get(secret=key)
-            return system_user
-        raise HTTPException(401, "Unauthorized")
+    def authenticate(self, request: Request, token: str) -> Optional[SystemUser]:
+        """
+        Authenticate the request using the provided JWT token.
+
+        Args:
+            request: The request instance.
+            token: A string representing the Bearer token.
+
+        Returns:
+            The SystemUser instance associated with the provided token.
+
+        Raises:
+            HTTPException: If the token is not properly formatted,
+            does not contain a 'sub' claim, or is not a valid JWT token.
+        """
+        try:
+            if token.startswith("Bearer "):
+                token = token[7:]
+            else:
+                raise HTTPException(
+                    message="Token mal formatado, deve haver o prefixo Bearer",
+                    status_code=401,
+                )
+            payload = jwt.decode(
+                token,
+                SECRET_KEY,
+                algorithms=[ALGORITHM],
+                verify=True,
+                options={"verify_exp": True},
+                expire=ACCESS_TOKEN_EXPIRE_MINUTES,
+            )
+            user_id = payload.get("sub")
+            if user_id is None:
+                raise HTTPException(401, "Unauthorized")
+            user = SystemUser.objects.get(id=user_id)
+            return user
+        except jwt.InvalidTokenError:
+            raise HTTPException(401, "Unauthorized")
 
 
-header_key = ApiKey()
+api_description = """
+    Work in progress API
+    ## Authorization
+    This API uses JWT Bearer tokens for authorization. To authorize,
+    click the 'Authorize' button and enter your token
+    in the format 'Bearer {your_token}'.
+    """
 
 api = NinjaAPI(
     title="Work in progress API",
     version="0.0.1",
-    description="Work in progress",
-    csrf=True,
-    urls_namespace="api",
-    auth=header_key,
+    description=api_description,
+    auth=JWTAuth(),
 )
 
 
@@ -71,7 +111,8 @@ def authenticate(request: Request, username: str, password: str) -> Optional[str
     try:
         user = SystemUser.objects.get(username=username)
         if user.password == password:
-            return user.secret
+            token = jwt.encode({"sub": user.id}, SECRET_KEY, algorithm=ALGORITHM)
+            return token
         else:
             raise HTTPException(401, "Invalid Credentials")
 
@@ -88,9 +129,9 @@ def login(request: Request, data: LoginSchema) -> Tuple[int, Dict[str, str]]:
     - **password**: password
 
     """
-    x_api_key = authenticate(request, username=data.username, password=data.password)
-    if x_api_key is not None:
-        return 200, {"message": "Logged in succesfully", "x_api_key": x_api_key}
+    token = authenticate(request, username=data.username, password=data.password)
+    if token is not None:
+        return 200, {"message": "Logged in succesfully", "token": token}
     else:
         raise HTTPException(401, "Invalid Credentials")
 
