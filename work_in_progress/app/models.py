@@ -21,6 +21,9 @@ class SystemUser(AbstractUser):
     class Meta:
         db_table = "system_user"
 
+    def __str__(self) -> str:
+        return f"{self.username} <-> {self.email}"
+
 
 SystemUser._meta.get_field("groups").remote_field.related_name = "system_users_groups"
 SystemUser._meta.get_field(
@@ -59,6 +62,9 @@ class Contato(models.Model):
         related_name="contatos",
     )
 
+    def __str__(self) -> str:
+        return f"{self.nome} <-> {self.email_responsavel} <-> {self.email_cobranca}"
+
 
 class Company(models.Model):
     company_id: str = models.CharField(
@@ -82,6 +88,9 @@ class Company(models.Model):
     contato: Contato = models.ForeignKey(
         Contato, on_delete=models.CASCADE, related_name="companies"
     )
+
+    def __str__(self) -> str:
+        return f"{self.razao_social} <-> {self.cnpj} <-> {self.nome_fantasia}"
 
 
 class Processo(models.Model):
@@ -113,6 +122,11 @@ class Processo(models.Model):
     atualizado_em: datetime = models.DateTimeField(auto_now=True)
     ativo: bool = models.BooleanField(default=True)
 
+    def __str__(self) -> str:
+        return (
+            f"{self.numero_processo} <-> {self.cliente} <-> {self.advogado_responsavel}"
+        )
+
 
 class Produto(models.Model):
     id_produto: str = models.CharField(
@@ -131,3 +145,6 @@ class Produto(models.Model):
     )
     criado_em: datetime = models.DateTimeField(auto_now_add=True)
     atualizado_em: datetime = models.DateTimeField(auto_now=True)
+
+    def __str__(self) -> str:
+        return f"{self.nome} <-> {self.descricao} <-> {self.preco}"
