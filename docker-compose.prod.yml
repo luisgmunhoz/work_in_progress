@@ -60,6 +60,36 @@ services:
         reservations:
           cpus: '0.2'
           memory: '256M'
+  collectstatic:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command:  python3 manage.py collectstatic --noinput
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - static_volume:/app/staticfiles
+    networks:
+      - app-network
+
+    env_file:
+      - .env
+    environment:
+      - PG_HOST=db
+      - PG_USER=postgres
+      - PG_PASSWORD=postgres
+      - PG_DATABASE=postgres
+      - PG_PORT=5432
+    restart: on-failure
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: '512M'
+        reservations:
+          cpus: '0.2'
+          memory: '256M'
   app:
     build:
       context: .
@@ -70,10 +100,14 @@ services:
         condition: service_healthy
       migrate:
         condition: service_completed_successfully
-    ports:
-      - 8000:8000
+      collectstatic:
+        condition: service_completed_successfully
+    expose:
+      - 8000
     env_file:
       - .env
+    volumes:
+      - static_volume:/app/staticfiles
     environment:
       - PG_HOST=db
       - PG_USER=postgres
@@ -91,8 +125,22 @@ services:
         reservations:
           cpus: '0.5'
           memory: '512M'
+  nginx:
+    image: nginx
+    volumes:
+      - static_volume:/app/staticfiles
+      - ./nginx:/etc/nginx/conf.d
+    ports:
+      - 8000:80
+    networks:
+      - app-network
+    links:
+      - app
+    depends_on:
+      - app
 networks:
   app-network:
 
 volumes:
   pgdata:
+  static_volume:
